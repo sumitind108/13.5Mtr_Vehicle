@@ -238,14 +238,13 @@ def plot_parameters(data, parameters, gain_factors):
     plt.switch_backend('Agg')  # Switch to a non-GUI backend
     plt.figure(figsize=(12, 8))
 
-    # Determine the maximum value across all parameters for setting the y-axis limit
     max_value = 0
     for param in parameters:
         if param in data.columns:
             max_value = max(max_value, data[param].max())
         else:
             logging.error(f"Parameter '{param}' not found in data columns.")
-            return None  # Exit early if any parameter is invalid
+            return None
 
     for param, gain in zip(parameters, gain_factors):
         if param in data.columns:
@@ -256,11 +255,10 @@ def plot_parameters(data, parameters, gain_factors):
     plt.title('Parameters over Time')
     plt.legend()
     plt.grid(True)
-    plt.ylim(0, max_value * max(gain_factors))  # Set y-axis limit based on max value and gain factors
+    plt.ylim(0, max_value * max(gain_factors))
     plt.xticks(rotation=45)
     plt.tight_layout()
     
-    # Save plot to bytes buffer
     img = io.BytesIO()
     plt.savefig(img, format='png')
     img.seek(0)
@@ -288,13 +286,11 @@ def upload_file():
         try:
             data = load_data(file, file.filename)
             
-            # Check for necessary columns
             required_columns = ['Date', 'Time'] + parameters
             missing_columns = [col for col in required_columns if col not in data.columns]
             if missing_columns:
                 return f"Missing columns: {', '.join(missing_columns)}", 400
             
-            # Convert date and time columns to datetime
             data['Datetime'] = pd.to_datetime(data['Date'] + ' ' + data['Time'], infer_datetime_format=True, errors='coerce')
             
             if len(parameters) != len(gain_factors):
@@ -303,7 +299,6 @@ def upload_file():
             img = plot_parameters(data, parameters, gain_factors)
             
             if img:
-                # Save plot to disk for download
                 plot_filename = f'{secure_filename(file.filename)}_plot.png'
                 img_path = os.path.join('static', plot_filename)
                 with open(img_path, 'wb') as f:
@@ -314,7 +309,7 @@ def upload_file():
                 return "Parameter(s) not found in the data or datetime parsing failed.", 400
         except Exception as e:
             logging.error(f"Exception occurred: {e}")
-            return str(e), 500
+            return "An error occurred while processing the file.", 500
     
     return "No file uploaded.", 400
 
