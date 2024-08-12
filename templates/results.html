@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>13.5 Meter Vehicle Plot - Results</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-image: url('/static/bus.webp');
+            background-size: cover;
+            background-position: center;
+            color: #333;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-top: 30px;
+            max-width: 800px;
+            position: relative;
+            z-index: 1;
+        }
+        h1 {
+            color: #004085;
+        }
+        .btn-custom {
+            background-color: #0056b3;
+            color: white;
+        }
+        .btn-custom:hover {
+            background-color: #004085;
+        }
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 20px;
+        }
+        .download-btn {
+            margin-top: 20px;
+            background-color: #007bff;
+            color: white;
+        }
+        .download-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Procurement Team - Plot Results</h1>
+        <div class="chart-container">
+            <img src="/static/{{ plot_url }}" alt="Plot">
+        </div>
+        <a href="/static/{{ plot_url }}" class="btn download-btn" download>Download Plot</a>
+    </div>
+</body>
+</html>

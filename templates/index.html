@@ -1,0 +1,148 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procurement Team - Data Upload</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-image: url('/static/bus.webp');
+            background-size: cover;
+            background-position: center;
+            color: #333;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-top: 30px;
+            max-width: 800px;
+            position: relative;
+            z-index: 1;
+        }
+        h1 {
+            color: #004085;
+        }
+        .btn-custom {
+            background-color: #0056b3;
+            color: white;
+        }
+        .btn-custom:hover {
+            background-color: #004085;
+        }
+        .file-input {
+            margin-bottom: 20px;
+        }
+        .alert {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Procurement Team - Upload Data</h1>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Choose CSV or Excel file to upload:</label>
+                <input type="file" class="form-control-file" id="file" name="file" required>
+            </div>
+            <div class="form-group">
+                <label for="parameters">Parameters (comma-separated):</label>
+                <input type="text" class="form-control" id="parameters" name="parameters" placeholder="Enter parameters (e.g., Param1, Param2)" required>
+            </div>
+            <button type="submit" class="btn btn-custom">Upload and Plot</button>
+        </form>
+        {% if error %}
+            <div class="alert alert-danger mt-3" role="alert">
+                {{ error }}
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html> -->
+
+
+<!-- ---------------------------------------------- -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procurement Team - Data Upload</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-image: url('/static/bus.webp');
+            background-size: cover;
+            background-position: center;
+            color: #333;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-top: 30px;
+            max-width: 800px;
+            position: relative;
+            z-index: 1;
+        }
+        h1 {
+            color: #004085;
+        }
+        .btn-custom {
+            background-color: #0056b3;
+            color: white;
+        }
+        .btn-custom:hover {
+            background-color: #004085;
+        }
+        .file-input {
+            margin-bottom: 20px;
+        }
+        .alert {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>13.5 Meter Vehicle - Upload Data</h1>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Choose CSV or Excel file to upload:</label>
+                <input type="file" class="form-control-file" id="file" name="file" required>
+            </div>
+            <div class="form-group">
+                <label for="parameters">Parameters (comma-separated):</label>
+                <input type="text" class="form-control" id="parameters" name="parameters" placeholder="Enter parameters (e.g., Param1, Param2)" required>
+            </div>
+            <div class="form-group">
+                <label for="gain_factors">Gain Factors (comma-separated values):</label>
+                <input type="text" class="form-control" id="gain_factors" name="gain_factors" placeholder="Enter gain factors (e.g., 1, 2)" required>
+            </div>
+            <button type="submit" class="btn btn-custom">Upload and Plot</button>
+        </form>
+        {% if error %}
+            <div class="alert alert-danger mt-3" role="alert">
+                {{ error }}
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
