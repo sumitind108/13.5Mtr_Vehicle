@@ -126,12 +126,12 @@ def plot_parameters(data, parameters, gain_factors):
     for param in parameters:
         if param in data.columns:
             max_value = max(max_value, data[param].max())
+        else:
+            return None  # Exit early if any parameter is invalid
 
     for param, gain in zip(parameters, gain_factors):
         if param in data.columns:
             plt.plot(data['Datetime'], data[param] * gain, label=f"{param} (x{gain})")
-        else:
-            return None  # Exit early if any parameter is invalid
     
     plt.xlabel('Datetime')
     plt.ylabel('Values')
@@ -160,6 +160,7 @@ def upload_file():
     parameters = request.form.get('parameters', '').split(',')
     parameters = [param.strip() for param in parameters]
     gain_factors = request.form.get('gain_factors', '').split(',')
+    
     try:
         gain_factors = [float(gain.strip()) for gain in gain_factors]
     except ValueError:
@@ -198,13 +199,8 @@ def upload_file():
     
     return "No file uploaded.", 400
 
-# if __name__ == '__main__':
-#     if not os.path.exists('static'):
-#         os.makedirs('static')
-#     app.run(port=5006, debug=True)
-
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # Use environment variable PORT
+    port = int(os.environ.get('PORT', 5007))  # Use environment variable PORT
     if not os.path.exists('static'):
         os.makedirs('static')
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)
