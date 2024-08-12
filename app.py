@@ -198,7 +198,13 @@ def upload_file():
     
     return "No file uploaded.", 400
 
+# if __name__ == '__main__':
+#     if not os.path.exists('static'):
+#         os.makedirs('static')
+#     app.run(port=5006, debug=True)
+
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))  # Use environment variable PORT
     if not os.path.exists('static'):
         os.makedirs('static')
-    app.run(port=5006, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=True)
