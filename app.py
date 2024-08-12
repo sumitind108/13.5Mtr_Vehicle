@@ -208,7 +208,6 @@
 
 
 # -----------------------------------------------------------
-
 from flask import Flask, request, render_template
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -236,7 +235,8 @@ def load_data(file_stream, file_name):
 
 def plot_parameters(data, parameters, gain_factors):
     plt.switch_backend('Agg')  # Switch to a non-GUI backend
-    plt.figure(figsize=(10, 6))  # Reduce figure size to save memory
+    plt.figure(figsize=(8, 5))  # Reduce figure size
+    plt.gcf().set_dpi(60)  # Reduce DPI
 
     # Determine the maximum value across all parameters for setting the y-axis limit
     max_value = 0
@@ -262,7 +262,7 @@ def plot_parameters(data, parameters, gain_factors):
     
     # Save plot to bytes buffer
     img = io.BytesIO()
-    plt.savefig(img, format='png', bbox_inches='tight', dpi=80)  # Reduce DPI to save memory
+    plt.savefig(img, format='png', bbox_inches='tight')  # Remove dpi parameter
     img.seek(0)
     plt.close()
     
@@ -321,12 +321,12 @@ def upload_file():
                 return "Parameter(s) not found in the data or datetime parsing failed.", 400
         except Exception as e:
             logging.error(f"Exception occurred: {e}")
-            return "An error occurred while processing the file.", 500
+            return f"An error occurred while processing the file: {e}", 500
     
     return "No file uploaded.", 400
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5008))  # Use environment variable PORT
+    port = int(os.environ.get('PORT', 5009))  # Use environment variable PORT
     if not os.path.exists('static'):
         os.makedirs('static')
     app.run(host='0.0.0.0', port=port, debug=True)
