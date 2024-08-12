@@ -220,7 +220,7 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)  # Set to DEBUG for detailed logging
 
 def load_data(file_stream, file_name):
     _, ext = os.path.splitext(file_name)
@@ -236,7 +236,7 @@ def load_data(file_stream, file_name):
 
 def plot_parameters(data, parameters, gain_factors):
     plt.switch_backend('Agg')  # Switch to a non-GUI backend
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(10, 6))  # Reduce figure size to save memory
 
     # Determine the maximum value across all parameters for setting the y-axis limit
     max_value = 0
@@ -262,7 +262,7 @@ def plot_parameters(data, parameters, gain_factors):
     
     # Save plot to bytes buffer
     img = io.BytesIO()
-    plt.savefig(img, format='png', bbox_inches='tight')  # Use bbox_inches='tight'
+    plt.savefig(img, format='png', bbox_inches='tight', dpi=80)  # Reduce DPI to save memory
     img.seek(0)
     plt.close()
     
@@ -282,6 +282,7 @@ def upload_file():
     try:
         gain_factors = [float(gain.strip()) for gain in gain_factors]
     except ValueError:
+        logging.error("Invalid gain factor values provided.")
         return "Invalid gain factor values provided.", 400
     
     if file and file.filename:
@@ -293,6 +294,7 @@ def upload_file():
             required_columns = ['Date', 'Time'] + parameters
             missing_columns = [col for col in required_columns if col not in data.columns]
             if missing_columns:
+                logging.error(f"Missing columns: {', '.join(missing_columns)}")
                 return f"Missing columns: {', '.join(missing_columns)}", 400
             
             # Convert date and time columns to datetime
@@ -300,6 +302,7 @@ def upload_file():
             data['Datetime'] = pd.to_datetime(data['Date'] + ' ' + data['Time'], infer_datetime_format=True, errors='coerce')
             
             if len(parameters) != len(gain_factors):
+                logging.error("The number of parameters must match the number of gain factors.")
                 return "The number of parameters must match the number of gain factors.", 400
             
             logging.info("Plotting parameters...")
@@ -314,6 +317,7 @@ def upload_file():
                 
                 return render_template('results.html', plot_url=plot_filename)
             else:
+                logging.error("Plotting failed.")
                 return "Parameter(s) not found in the data or datetime parsing failed.", 400
         except Exception as e:
             logging.error(f"Exception occurred: {e}")
@@ -322,7 +326,7 @@ def upload_file():
     return "No file uploaded.", 400
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5007))  # Use environment variable PORT
+    port = int(os.environ.get('PORT', 5008))  # Use environment variable PORT
     if not os.path.exists('static'):
         os.makedirs('static')
     app.run(host='0.0.0.0', port=port, debug=True)
