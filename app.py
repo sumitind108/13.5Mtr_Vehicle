@@ -334,41 +334,37 @@
 
 # -------------------------------
 
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template
 import pandas as pd
 import matplotlib.pyplot as plt
 import io
 import os
 import logging
 from werkzeug.utils import secure_filename
-from celery import Celery
 
 app = Flask(__name__)
 
-# Configure Celery
-app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
-celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
-celery.conf.update(app.config)
-
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)  # Set to DEBUG for detailed logging
 
 def load_data(file_stream, file_name):
     _, ext = os.path.splitext(file_name)
+    
     if ext == '.xlsx':
         data = pd.read_excel(file_stream)
     elif ext == '.ods':
         data = pd.read_excel(file_stream, engine='odf')
     else:
         raise ValueError("Unsupported file type. Please use .xlsx or .ods files.")
+    
     return data
 
 def plot_parameters(data, parameters, gain_factors):
-    plt.switch_backend('Agg')
-    plt.figure(figsize=(8, 5))
-    plt.gcf().set_dpi(60)
+    plt.switch_backend('Agg')  # Switch to a non-GUI backend
+    plt.figure(figsize=(8, 5))  # Reduce figure size
+    plt.gcf().set_dpi(60)  # Reduce DPI
 
+    # Determine the maximum value across all parameters for setting the y-axis limit
     max_value = 0
     for param in parameters:
         if param in data.columns:
@@ -386,29 +382,17 @@ def plot_parameters(data, parameters, gain_factors):
     plt.title('Parameters over Time')
     plt.legend()
     plt.grid(True)
-    plt.ylim(0, max_value * max(gain_factors))
+    plt.ylim(0, max_value * max(gain_factors))  # Set y-axis limit based on max value and gain factors
     plt.xticks(rotation=45)
     plt.tight_layout()
     
+    # Save plot to bytes buffer
     img = io.BytesIO()
-    plt.savefig(img, format='png', bbox_inches='tight')
+    plt.savefig(img, format='png', bbox_inches='tight')  # Remove dpi parameter
     img.seek(0)
     plt.close()
     
     return img
-
-@celery.task
-def generate_plot(file_data, parameters, gain_factors):
-    data = load_data(file_data, 'uploaded_file.xlsx')  # Adjust if needed
-    img = plot_parameters(data, parameters, gain_factors)
-    if img:
-        plot_filename = 'plot.png'
-        img_path = os.path.join('static', plot_filename)
-        with open(img_path, 'wb') as f:
-            f.write(img.getvalue())
-        return plot_filename
-    else:
-        raise Exception("Plotting failed.")
 
 @app.route('/')
 def index():
@@ -429,32 +413,46 @@ def upload_file():
     
     if file and file.filename:
         try:
-            logging.info("Starting background task...")
-            file_data = file.read()  # Read file into memory
-            task = generate_plot.delay(file_data, parameters, gain_factors)
-            return jsonify({"task_id": task.id}), 202
+            logging.info("Loading data...")
+            data = load_data(file, file.filename)
+            
+            # Check for necessary columns
+            required_columns = ['Date', 'Time'] + parameters
+            missing_columns = [col for col in required_columns if col not in data.columns]
+            if missing_columns:
+                logging.error(f"Missing columns: {', '.join(missing_columns)}")
+                return f"Missing columns: {', '.join(missing_columns)}", 400
+            
+            # Convert date and time columns to datetime
+            logging.info("Processing dates...")
+            data['Datetime'] = pd.to_datetime(data['Date'] + ' ' + data['Time'], infer_datetime_format=True, errors='coerce')
+            
+            if len(parameters) != len(gain_factors):
+                logging.error("The number of parameters must match the number of gain factors.")
+                return "The number of parameters must match the number of gain factors.", 400
+            
+            logging.info("Plotting parameters...")
+            img = plot_parameters(data, parameters, gain_factors)
+            
+            if img:
+                # Save plot to disk for download
+                plot_filename = f'{secure_filename(file.filename)}_plot.png'
+                img_path = os.path.join('static', plot_filename)
+                with open(img_path, 'wb') as f:
+                    f.write(img.getvalue())
+                
+                return render_template('results.html', plot_url=plot_filename)
+            else:
+                logging.error("Plotting failed.")
+                return "Parameter(s) not found in the data or datetime parsing failed.", 400
         except Exception as e:
             logging.error(f"Exception occurred: {e}")
             return f"An error occurred while processing the file: {e}", 500
     
     return "No file uploaded.", 400
 
-@app.route('/results/<task_id>')
-def results(task_id):
-    from celery.result import AsyncResult
-    task = AsyncResult(task_id, app=celery)
-    if task.state == 'SUCCESS':
-        plot_url = task.result
-        return render_template('results.html', plot_url=plot_url)
-    else:
-        return f"Task status: {task.state}", 202
-
-@app.route('/static/<path:filename>')
-def static_files(filename):
-    return send_from_directory('static', filename)
-
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5008))
+    port = int(os.environ.get('PORT', 5008))  # Use environment variable PORT
     if not os.path.exists('static'):
         os.makedirs('static')
     app.run(host='0.0.0.0', port=port, debug=True)
