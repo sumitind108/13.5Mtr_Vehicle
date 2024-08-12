@@ -214,12 +214,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import io
 import os
-from werkzeug.utils import secure_filename
 import logging
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-# Set up logging
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 
 def load_data(file_stream, file_name):
@@ -238,6 +238,7 @@ def plot_parameters(data, parameters, gain_factors):
     plt.switch_backend('Agg')  # Switch to a non-GUI backend
     plt.figure(figsize=(12, 8))
 
+    # Determine the maximum value across all parameters for setting the y-axis limit
     max_value = 0
     for param in parameters:
         if param in data.columns:
@@ -249,18 +250,19 @@ def plot_parameters(data, parameters, gain_factors):
     for param, gain in zip(parameters, gain_factors):
         if param in data.columns:
             plt.plot(data['Datetime'], data[param] * gain, label=f"{param} (x{gain})")
-    
+
     plt.xlabel('Datetime')
     plt.ylabel('Values')
     plt.title('Parameters over Time')
     plt.legend()
     plt.grid(True)
-    plt.ylim(0, max_value * max(gain_factors))
+    plt.ylim(0, max_value * max(gain_factors))  # Set y-axis limit based on max value and gain factors
     plt.xticks(rotation=45)
     plt.tight_layout()
     
+    # Save plot to bytes buffer
     img = io.BytesIO()
-    plt.savefig(img, format='png')
+    plt.savefig(img, format='png', bbox_inches='tight')  # Use bbox_inches='tight'
     img.seek(0)
     plt.close()
     
@@ -284,21 +286,27 @@ def upload_file():
     
     if file and file.filename:
         try:
+            logging.info("Loading data...")
             data = load_data(file, file.filename)
             
+            # Check for necessary columns
             required_columns = ['Date', 'Time'] + parameters
             missing_columns = [col for col in required_columns if col not in data.columns]
             if missing_columns:
                 return f"Missing columns: {', '.join(missing_columns)}", 400
             
+            # Convert date and time columns to datetime
+            logging.info("Processing dates...")
             data['Datetime'] = pd.to_datetime(data['Date'] + ' ' + data['Time'], infer_datetime_format=True, errors='coerce')
             
             if len(parameters) != len(gain_factors):
                 return "The number of parameters must match the number of gain factors.", 400
             
+            logging.info("Plotting parameters...")
             img = plot_parameters(data, parameters, gain_factors)
             
             if img:
+                # Save plot to disk for download
                 plot_filename = f'{secure_filename(file.filename)}_plot.png'
                 img_path = os.path.join('static', plot_filename)
                 with open(img_path, 'wb') as f:
@@ -314,7 +322,7 @@ def upload_file():
     return "No file uploaded.", 400
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # Use environment variable PORT
+    port = int(os.environ.get('PORT', 5007))  # Use environment variable PORT
     if not os.path.exists('static'):
         os.makedirs('static')
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=True)
